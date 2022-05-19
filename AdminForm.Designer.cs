@@ -46,6 +46,7 @@ namespace ShopEasy
             this.custRegDiscountLabel = new System.Windows.Forms.Label();
             this.custRegDiscountBox = new System.Windows.Forms.CheckedListBox();
             this.customerSearchGroupBox = new System.Windows.Forms.GroupBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.editDiscountLabel = new System.Windows.Forms.Label();
             this.custDiscountEditBox = new System.Windows.Forms.CheckedListBox();
             this.custNewEmailTextbox = new System.Windows.Forms.TextBox();
@@ -232,6 +233,7 @@ namespace ShopEasy
             // 
             // customerSearchGroupBox
             // 
+            this.customerSearchGroupBox.Controls.Add(this.label4);
             this.customerSearchGroupBox.Controls.Add(this.editDiscountLabel);
             this.customerSearchGroupBox.Controls.Add(this.custDiscountEditBox);
             this.customerSearchGroupBox.Controls.Add(this.custNewEmailTextbox);
@@ -254,6 +256,15 @@ namespace ShopEasy
             this.customerSearchGroupBox.TabStop = false;
             this.customerSearchGroupBox.Text = "Customer Search and Edit";
             this.customerSearchGroupBox.Enter += new System.EventHandler(this.customerSearchGroupBox_Enter);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(69, 168);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(319, 15);
+            this.label4.TabIndex = 24;
+            this.label4.Text = "A customer must be searched for before they can be edited";
             // 
             // editDiscountLabel
             // 
@@ -283,6 +294,7 @@ namespace ShopEasy
             this.custNewEmailTextbox.Name = "custNewEmailTextbox";
             this.custNewEmailTextbox.Size = new System.Drawing.Size(100, 23);
             this.custNewEmailTextbox.TabIndex = 8;
+            this.custNewEmailTextbox.TextChanged += new System.EventHandler(this.custNewEmailTextbox_TextChanged);
             // 
             // custNewPhoneTextbox
             // 
@@ -290,6 +302,7 @@ namespace ShopEasy
             this.custNewPhoneTextbox.Name = "custNewPhoneTextbox";
             this.custNewPhoneTextbox.Size = new System.Drawing.Size(100, 23);
             this.custNewPhoneTextbox.TabIndex = 7;
+            this.custNewPhoneTextbox.TextChanged += new System.EventHandler(this.custNewPhoneTextbox_TextChanged);
             // 
             // custNewNameTextbox
             // 
@@ -351,6 +364,7 @@ namespace ShopEasy
             this.deleteCustomerBtn.TabIndex = 4;
             this.deleteCustomerBtn.Text = "Delete";
             this.deleteCustomerBtn.UseVisualStyleBackColor = true;
+            this.deleteCustomerBtn.Click += new System.EventHandler(this.deleteCustomerBtn_Click_1);
             // 
             // editCustomerBtn
             // 
@@ -360,6 +374,7 @@ namespace ShopEasy
             this.editCustomerBtn.TabIndex = 10;
             this.editCustomerBtn.Text = "Edit";
             this.editCustomerBtn.UseVisualStyleBackColor = true;
+            this.editCustomerBtn.Click += new System.EventHandler(this.editCustomerBtn_Click);
             // 
             // customerSearchButton
             // 
@@ -709,5 +724,6 @@ namespace ShopEasy
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label viewInvoicesLabel;
         private System.Windows.Forms.Button viewPastInvoicesBtn;
+        private System.Windows.Forms.Label label4;
     }
 }

@@ -82,17 +82,28 @@ namespace ShopEasy
         private void productSearchBtn_Click(object sender, EventArgs e)
         {
             using ShopEasyContext context = new ShopEasyContext();
+            CustomerMaintenance customerMaintenance = new CustomerMaintenance();
             string prodName = productNameTextbox.Text;
             var prod = context.Products
                 .Where(p => p.Name == prodName)
                 .FirstOrDefault();
             if (prod is Products)
             {
-                MessageBox.Show($"Product Found:\n Name: {prod.Name}\n Price: ${prod.Price}\n Category: {prod.Category}", "Success", MessageBoxButtons.OK, MessageBoxIcon.None);
+                if (customerMaintenance.IsValidProduct(prod.ProductId))
+                {
+                    MessageBox.Show($"Product Found:\n Name: {prod.Name}\n Price: ${prod.Price}\n Category: {prod.Category}",
+                        "Success", MessageBoxButtons.OK, MessageBoxIcon.None);
+                }
+                else 
+                {
+                    MessageBox.Show("Product not found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
             }
             else
             {
                 MessageBox.Show("Product not found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
         }
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -240,7 +251,7 @@ namespace ShopEasy
                     .FirstOrDefault();
                 if (prod is Products)
                 {
-                    // If teacher and book calculate discount
+                    // If the customer is a teacher and the product is a book calculate discount
                     if (prod.Category.Equals("Book") && discount.Equals("Teacher "))
                     {
                         totalPrice += (prod.Price * quant) * 0.9m;
@@ -250,7 +261,13 @@ namespace ShopEasy
                         totalPrice += prod.Price * quant;
                     }
                 }
+                else
+                {
+                    MessageBox.Show("Invalid Product", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
             }
+            // Get and apply other discounts
             if (discount.Equals("Senior"))
             {
                 totalPrice -= totalPrice * 0.05m;
@@ -263,13 +280,19 @@ namespace ShopEasy
             {
                 totalPrice += totalPrice * .055m;
             }
-            // After each item is added, update the invoice total
+
+            // After all items are added, update the invoice total
             var record = context.Invoices
             .Where(r => r.InvoiceId == invoiceId)
             .FirstOrDefault();
             if (record is Invoices)
             {
                 record.TotalPayment = totalPrice;
+            }
+            else
+            {
+                MessageBox.Show("Could not proccess transaction", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             context.SaveChanges();
             MessageBox.Show($"Invoice: {invoiceId}\n Total: ${totalPrice}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);

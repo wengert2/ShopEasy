@@ -1,6 +1,5 @@
 ﻿using System.Windows.Forms;
 using System;
-using System.Diagnostics;
 using System.Data;
 using System.Linq;
 using System.Collections.Generic;
@@ -23,6 +22,28 @@ namespace ShopEasy
         }
 
         private List<KeyValuePair<int, int>> orders = new List<KeyValuePair<int, int>>();
+        private string GetEditDiscount()
+        {
+            string discount = "";
+            if (custDiscountEditBox.CheckedItems.Count != 0)
+            {
+                foreach (string s in custDiscountEditBox.CheckedItems)
+                {
+                    discount += s;
+                }
+                if (String.IsNullOrEmpty(discount) || String.IsNullOrWhiteSpace(discount) || discount.Equals(""))
+                {
+                    discount = "None";
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("Discount not selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                discount = "None";
+            }
+            return discount;
+        }
         private string GetDiscount()
         {
             string discount = "";
@@ -45,24 +66,6 @@ namespace ShopEasy
             }
             return discount;
         }
-        private string GetCustomerDiscount(string name)
-        {
-            using ShopEasyContext context = new ShopEasyContext();
-            var custDiscount = context.Customers
-                .Where(c => c.Name == name)
-                .Select(c => c.Discount)
-                .FirstOrDefault();
-
-            return custDiscount;
-        }
-        private decimal GetSalesTax(string discount)
-        {
-            if (discount.Equals("Senior") || discount.Equals("Veteran"))
-            {
-                return 0;
-            }
-            return 0.055m;
-        }
         private void customerNameTextbox_TextChanged(object sender, EventArgs e)
         {
 
@@ -79,20 +82,6 @@ namespace ShopEasy
         {
 
         }
-        private int GetCustomerID(string name)
-        {
-            using ShopEasyContext context = new ShopEasyContext();
-            int cust = context.Customers
-                .Where(c => c.Name == name)
-                .Select(c => c.CustomerId)
-                .SingleOrDefault();
-
-            if (cust.Equals(0) || cust.Equals(1))
-            {
-                return -1;
-            }
-            return cust;
-        }
         private void DeleteCustomer(string name)
         {
             ShopEasyContext context = new ShopEasyContext();
@@ -108,46 +97,10 @@ namespace ShopEasy
             {
                 MessageBox.Show("Unable to delete Customer", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            // SqlException: The DELETE statement conflicted with the
+            // REFERENCE constraint "FK_CustomerId_Customers".
+            // The conflict occurred in database "ShopEasy", table "dbo.Invoices", column 'CustomerId'.
             context.SaveChanges();
-        }
-        private bool IsvalidUser(string username, string password)
-        {
-            using ShopEasyContext context = new ShopEasyContext();
-            var customerLogin = from customer in context.Logins
-                                where customer.Username == username
-                                && customer.Password == password
-                                select customer;
-            if (customerLogin.Any())
-            {
-                return true;
-            }
-            return false;
-        }
-        private bool IsValidProduct(string productName)
-        {
-            using ShopEasyContext context = new ShopEasyContext();
-            var prod = from p in context.Products
-                       where p.Name == productName
-                       select p;
-            if (prod.Any())
-            {
-                return true;
-            }
-            return false;
-        }
-        private bool IsValidCustomer(string name)
-        {
-            using ShopEasyContext context = new ShopEasyContext();
-            var custName = context.Customers
-                .Where(c => c.Name == name)
-                .Select(c => c.Name)
-                .FirstOrDefault();
-            if (!(custName == null) && custName.Equals(name))
-            {
-                return true;
-            }
-            return false;
-
         }
 
         private string GetCustRegName()
@@ -159,46 +112,10 @@ namespace ShopEasy
             }
             return customerNameTextbox.Text;
         }
-        private int GetProductID(string prodName)
-        {
-            using ShopEasyContext context = new ShopEasyContext();
-            int prodID = context.Products
-                       .Where(p => p.Name == prodName)
-                       .Select(p => p.ProductId)
-                       .FirstOrDefault();
-            if (!(prodID <= 0))
-            {
-                return prodID;
-            }
-            MessageBox.Show("Invalid Product ID", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return -1;
-        }
-        private int GetInvoiceID(int custID)
-        {
-            using ShopEasyContext context = new ShopEasyContext();
-            int ord = context.Invoices
-                .Where(i => i.CustomerId == custID)
-                .Select(i => i.InvoiceId)
-                .FirstOrDefault();
-            if (!(ord <= 0))
-            {
-                return ord;
-            }
-            return -1;
-        }
-        private void deleteCustomerBtn_Click(object sender, EventArgs e)
-        {
-            using ShopEasyContext context = new ShopEasyContext();
-            string name = customerNameSearchTextbox.Text;
-            var result = MessageBox.Show("Are you sure?", "Delete", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
-            if (result == DialogResult.OK)
-            {
-                DeleteCustomer(name);
-            }
-        }
         private void customerSearchButton_Click_1(object sender, EventArgs e)
         {
             using ShopEasyContext context = new ShopEasyContext();
+
             // Get the textbox input
             string name = customerNameSearchTextbox.Text;
             // Check if there is input
@@ -245,10 +162,6 @@ namespace ShopEasy
             {
                 MessageBox.Show("Unable to delete Product", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            /*
-             * SqlException: The DELETE statement conflicted with the REFERENCE constraint "FK_InvoiceItem_Products". The conflict occurred in database "ShopEasy", table "dbo.InvoiceItem", column 'ProductId'.
-The statement has been terminated.
-            */
             context.SaveChanges();
         }
         private void ProductSearchButton_Click(object sender, EventArgs e)
@@ -312,20 +225,46 @@ The statement has been terminated.
         private void AddProductButton_Click(object sender, EventArgs e)
         {
             ShopEasyContext context = new ShopEasyContext();
+            CustomerMaintenance customerMaintenance = new CustomerMaintenance();
             string prodName = productNameSearchTxtbx.Text;
             string prodCategory = productCategoryTxtbx.Text;
             string priceString = productPriceTxtbx.Text;
             decimal price;
+
+            // Test that product name is not empty and does not already exist
+            if (String.IsNullOrEmpty(prodName) || String.IsNullOrWhiteSpace(prodName))
+            {
+                MessageBox.Show("Product must have a name", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            else if (customerMaintenance.IsValidProduct(prodName))
+            {
+                MessageBox.Show("A product with the same name already exists", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (String.IsNullOrEmpty(priceString) || String.IsNullOrWhiteSpace(priceString))
+            {
+                MessageBox.Show("Product must have a price", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             NumberStyles style = NumberStyles.Number | NumberStyles.AllowCurrencySymbol;
             CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
             int count = context.Products.Count();
+            // Create try to convert the price string to a decimal and check if valid
             if (!(Decimal.TryParse(priceString, style, culture, out price)))
             {
                 MessageBox.Show("Invalid price", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             else
             {
                 price = Decimal.Parse(priceString);
+            }
+            if (price <= 0)
+            {
+                MessageBox.Show("Price cannot be less than or equal to zero", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
             Products product = new Products()
@@ -349,22 +288,34 @@ The statement has been terminated.
         private void addItemBtn_Click(object sender, EventArgs e)
         {
             using ShopEasyContext context = new ShopEasyContext();
+            CustomerMaintenance customerMaintenance = new CustomerMaintenance();
+
+            // Get the product name and ID
             string prodName = productCheckoutComboBox.Text;
-            int prodID = GetProductID(prodName);
-            string discount = GetCustomerDiscount(custCheckoutComboBox.Text);
+            int prodID = customerMaintenance.GetProductID(prodName);
+
+            // Check if the product ID is valid
+            if (!(prodID >= 0))
+            {
+                MessageBox.Show("Invalid Product ID", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            string discount = customerMaintenance.GetCustomerDiscount(custCheckoutComboBox.Text);
             int quant = (int)productQuantityUpDown.Value;
+
+            // Add the item to the orders KeyValuePair list
             orders.Add(new KeyValuePair<int, int>(prodID, quant));
         }
         private void generateInvoiceBtn_Click(object sender, EventArgs e)
         {
             using ShopEasyContext context = new ShopEasyContext();
+            CustomerMaintenance customerMaintenance = new CustomerMaintenance();
 
-            // Get the customer name, ID, and discount
+            // Get the customer name, ID, discount, and sales tax
             string custName = custCheckoutComboBox.Text;
-            int custId = GetCustomerID(custName);
-            // FIX
-            string discount = GetCustomerDiscount(custName);
-            decimal salesTax = GetSalesTax(discount);
+            int custId = customerMaintenance.GetCustomerID(custName);
+            string discount = customerMaintenance.GetCustomerDiscount(custName);
+            decimal salesTax = customerMaintenance.GetSalesTax(discount);
 
             // Create invoiceId and totalprice to be used later
             int invoiceId;
@@ -410,11 +361,12 @@ The statement has been terminated.
                 var prod = context.Products
                     .Where(p => p.ProductId == prodId)
                     .FirstOrDefault();
+
+                // check if product is found
                 if (prod is Products)
                 {
-                    // If teacher and book calculate discount
-                    // @TODO: FIX THIS 
-                    if (prod.Category.Equals("Book") && discount.Equals("Teacher "))
+                    // If customer is a teacher and the product is a book calculate discount
+                    if (prod.Category.Equals("Book") && (discount.Equals("Teacher ") || discount.Equals("Teacher")))
                     {
                         totalPrice += prod.Price * quant * 0.9m;
                     }
@@ -422,6 +374,11 @@ The statement has been terminated.
                     {
                         totalPrice += prod.Price * quant;
                     }
+                }
+                else
+                {
+                    MessageBox.Show("Failed to find product", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
             }
             if (discount.Equals("Senior"))
@@ -436,10 +393,12 @@ The statement has been terminated.
             {
                 totalPrice += totalPrice * .055m;
             }
+
             // After each item is added, update the invoice total
             var record = context.Invoices
             .Where(r => r.InvoiceId == invoiceId)
             .FirstOrDefault();
+
             if (record is Invoices)
             {
                 record.TotalPayment = totalPrice;
@@ -453,6 +412,7 @@ The statement has been terminated.
         }
         private void populateCustomerCheckoutComboBox()
         {
+            // Create a list of customers for the combobox 
             using ShopEasyContext context = new ShopEasyContext();
             List<Customers> custList = context.Customers.ToList();
             custCheckoutComboBox.DataSource = custList;
@@ -461,20 +421,46 @@ The statement has been terminated.
         }
         private void populateProductCheckkoutComboBox()
         {
+            // Create a list of products for the combobox
             using ShopEasyContext context = new ShopEasyContext();
             List<Products> productsList = context.Products.ToList();
             productCheckoutComboBox.DataSource = productsList;
             productCheckoutComboBox.ValueMember = nameof(Products.ProductId);
             productCheckoutComboBox.DisplayMember = nameof(Products.Name);
         }
-        
+
         private void custRegSubmitButton_Click(object sender, EventArgs e)
         {
             using ShopEasyContext context = new ShopEasyContext();
+            CustomerMaintenance customerMaintenance = new CustomerMaintenance();
+
+            // Get the discount and name of the new customer
             string discount = GetDiscount();
             string name = GetCustRegName();
+            if(String.IsNullOrEmpty(customerPhoneTextbox.Text) || String.IsNullOrWhiteSpace(customerPhoneTextbox.Text))
+            {
+                MessageBox.Show("Please input a valid phone number", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (String.IsNullOrEmpty(customerEmailTextbox.Text) || String.IsNullOrWhiteSpace(customerEmailTextbox.Text))
+            {
+                MessageBox.Show("Please input a valid email address", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (String.IsNullOrEmpty(customerUsernameTextbox.Text) || String.IsNullOrWhiteSpace(customerUsernameTextbox.Text))
+            {
+                MessageBox.Show("Please input a valid username", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (String.IsNullOrEmpty(custRegPasswordTextbox.Text) || String.IsNullOrWhiteSpace(custRegPasswordTextbox.Text))
+            {
+                MessageBox.Show("Please input a valid password", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            // Check that the customer name is valid
             if (!String.IsNullOrEmpty(name) || !String.IsNullOrWhiteSpace(name))
             {
+                // Create a new customer 
                 Customers newCustomer = new Customers()
                 {
                     Name = customerNameTextbox.Text,
@@ -482,17 +468,23 @@ The statement has been terminated.
                     Email = customerEmailTextbox.Text,
                     Discount = discount
                 };
+                // Add to and save database
                 context.Customers.Add(newCustomer);
                 context.SaveChanges();
+
+                // Create a new login based on the customerID
                 Logins newLogin = new Logins()
                 {
                     Username = customerUsernameTextbox.Text,
                     Password = custRegPasswordTextbox.Text,
                     CustomerId = newCustomer.CustomerId
                 };
+                // Add to and save the database
                 context.Logins.Add(newLogin);
                 context.SaveChanges();
-                if (IsvalidUser(customerUsernameTextbox.Text, custRegPasswordTextbox.Text))
+
+                // Check that the customer and login were created successfully
+                if (customerMaintenance.IsValidUser(customerUsernameTextbox.Text, custRegPasswordTextbox.Text) && customerMaintenance.IsValidCustomer(name))
                 {
                     MessageBox.Show("Customer Created Successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.None);
                     customerNameTextbox.Clear();
@@ -506,7 +498,13 @@ The statement has been terminated.
                 else
                 {
                     MessageBox.Show("Customer Creation Failed", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
+            }
+            else
+            {
+                MessageBox.Show("Invalid name", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
         }
         private void productCheckoutComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -532,7 +530,79 @@ The statement has been terminated.
         {
             CustomerInvoiceListForm customerInvoiceForm = new CustomerInvoiceListForm();
             customerInvoiceForm.ShowDialog();
+        }
 
+        private void editCustomerBtn_Click(object sender, EventArgs e)
+        {
+            using ShopEasyContext context = new ShopEasyContext();
+            CustomerMaintenance customerMaintenance = new CustomerMaintenance();
+            // Get the user input
+            string newCustName = custNewNameTextbox.Text;
+            string custName = customerNameSearchTextbox.Text;
+            string newPhone = custNewPhoneTextbox.Text;
+            string newEmail = custNewEmailTextbox.Text;
+            string newDiscount = GetEditDiscount();
+
+            // Verify that fields are not empty
+            if (String.IsNullOrEmpty(newCustName) || String.IsNullOrWhiteSpace(newCustName))
+            {
+                MessageBox.Show("Invalid New Name", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (String.IsNullOrEmpty(custName) || String.IsNullOrWhiteSpace(custName))
+            {
+                MessageBox.Show("Invalid Old Name", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if(String.IsNullOrEmpty(newPhone) || String.IsNullOrWhiteSpace(newPhone))
+            {
+                MessageBox.Show("Phone cannot be blank", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (String.IsNullOrEmpty(newEmail) || String.IsNullOrWhiteSpace(newEmail))
+            {
+                MessageBox.Show("Email cannot be blank", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            int customerId = customerMaintenance.GetCustomerID(custName);
+            var cust = context.Customers
+                .Where(c => c.CustomerId == customerId)
+                .FirstOrDefault();
+            if(cust is Customers)
+            {
+                cust.Name = newCustName;
+                cust.Phone = newPhone;
+                cust.Email = newEmail;
+                cust.Discount = newDiscount;
+                context.SaveChanges();
+            }
+            else
+            {
+                MessageBox.Show("Customer edit failed", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+        }
+
+        private void custNewPhoneTextbox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void custNewEmailTextbox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void deleteCustomerBtn_Click_1(object sender, EventArgs e)
+        {
+            using ShopEasyContext context = new ShopEasyContext();
+            string name = customerNameSearchTextbox.Text;
+            var result = MessageBox.Show("Are you sure?", "Delete", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+            if (result == DialogResult.OK)
+            {
+                DeleteCustomer(name);
+            }
         }
     }
 }
