@@ -82,9 +82,70 @@ namespace ShopEasy
         {
 
         }
+        private void DeleteInvoiceItem(List<int> invoiceIds)
+        {
+            using ShopEasyContext context = new ShopEasyContext();
+            foreach (int invoiceid in invoiceIds)
+            {
+                var invItems = context.InvoiceItem
+                .Where(t => t.InvoiceId == invoiceid);
+                if (invItems.Any())
+                {
+                    context.Remove(invItems);
+                    context.SaveChanges();
+                }
+            }
+        }
+        private void DeleteInvoices(int customerId)
+        {
+            // To delete the invoice you need to first delete the invoiceitems
+            using ShopEasyContext context = new ShopEasyContext();
+
+            // Find the invoiceid(s) associated with the customer
+            List<int> inv = context.Invoices
+                .Where(i => i.CustomerId == customerId)
+                .Select(i => (int)i.InvoiceId).ToList();
+            if (inv.Any())
+            {
+                DeleteInvoiceItem(inv);
+                context.RemoveRange(inv);
+                context.SaveChanges();
+            }
+
+        }
+        private bool DeleteLogin(int customerId)
+        {
+            using ShopEasyContext context = new ShopEasyContext();
+            var log = context.Logins
+                .Where(l => l.CustomerId == customerId)
+                .FirstOrDefault();
+            if (log.CustomerId > 1)
+            {
+                context.Remove(log);
+                context.SaveChanges();
+                return true;
+            }
+            return false;
+        }
         private void DeleteCustomer(string name)
         {
             ShopEasyContext context = new ShopEasyContext();
+            CustomerMaintenance customerMaintenance = new CustomerMaintenance();
+
+            // Get Customer ID
+            int custId = customerMaintenance.GetCustomerID(name);
+
+            // Delete the customer login
+            if (DeleteLogin(custId))
+            {
+                MessageBox.Show("Customer Login Deleted");
+            }
+            else
+            {
+                MessageBox.Show("Customer Login Was Not Deleted", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            // Delete the invoice items and then the invoices associated with the customer
+            DeleteInvoices(custId);
             var delCust = context.Customers
                         .Where(c => c.Name == name)
                         .FirstOrDefault();
@@ -97,10 +158,38 @@ namespace ShopEasy
             {
                 MessageBox.Show("Unable to delete Customer", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            // SqlException: The DELETE statement conflicted with the
-            // REFERENCE constraint "FK_CustomerId_Customers".
-            // The conflict occurred in database "ShopEasy", table "dbo.Invoices", column 'CustomerId'.
             context.SaveChanges();
+        }
+        private bool DeleteProduct(int prodId)
+        {
+            using ShopEasyContext context = new ShopEasyContext();
+
+            // Get a list of invoice items that contain the product
+            var invitem = context.InvoiceItem
+                .Where(t => t.ProductId == prodId).ToList();
+
+            // Check if any invoices are tied to the product
+            if (invitem.Any())
+            {
+                // remove each one
+                foreach (var inv in invitem)
+                {
+                    context.Remove(inv);
+                    context.SaveChanges();
+                }
+            }
+            var prod = context.Products
+                .Where(p => p.ProductId == prodId).ToList();
+            if (prod.Any())
+            {
+                foreach (var product in prod)
+                {
+                    context.Remove(product);
+                    context.SaveChanges();
+                }
+                return true;
+            }
+            return false;
         }
 
         private string GetCustRegName()
@@ -149,20 +238,29 @@ namespace ShopEasy
         private void DeleteProductButton_Click(object sender, EventArgs e)
         {
             ShopEasyContext context = new ShopEasyContext();
+            CustomerMaintenance customerMaintenance = new CustomerMaintenance();
+
+            // Get the product name to be deleted and check if it is valid
             string prodName = productNameSearchTxtbx.Text;
-            var delProd = context.Products
-                        .Where(p => p.Name == prodName)
-                        .FirstOrDefault();
-            if (delProd is Products)
+            if (String.IsNullOrEmpty(prodName) || String.IsNullOrWhiteSpace(prodName))
             {
-                context.Remove(delProd);
-                MessageBox.Show("Product deleted successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show("invalid product name", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
-            else
+            else if (!customerMaintenance.IsValidProduct(prodName))
             {
-                MessageBox.Show("Unable to delete Product", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("invalid product name", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
-            context.SaveChanges();
+
+            // get the product ID
+            int prodId = customerMaintenance.GetProductID(prodName);
+
+            // Delete the product
+            if (DeleteProduct(prodId))
+            {
+                MessageBox.Show("Product Deleted", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
         private void ProductSearchButton_Click(object sender, EventArgs e)
         {
@@ -437,7 +535,7 @@ namespace ShopEasy
             // Get the discount and name of the new customer
             string discount = GetDiscount();
             string name = GetCustRegName();
-            if(String.IsNullOrEmpty(customerPhoneTextbox.Text) || String.IsNullOrWhiteSpace(customerPhoneTextbox.Text))
+            if (String.IsNullOrEmpty(customerPhoneTextbox.Text) || String.IsNullOrWhiteSpace(customerPhoneTextbox.Text))
             {
                 MessageBox.Show("Please input a valid phone number", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -554,7 +652,7 @@ namespace ShopEasy
                 MessageBox.Show("Invalid Old Name", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if(String.IsNullOrEmpty(newPhone) || String.IsNullOrWhiteSpace(newPhone))
+            if (String.IsNullOrEmpty(newPhone) || String.IsNullOrWhiteSpace(newPhone))
             {
                 MessageBox.Show("Phone cannot be blank", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -568,7 +666,7 @@ namespace ShopEasy
             var cust = context.Customers
                 .Where(c => c.CustomerId == customerId)
                 .FirstOrDefault();
-            if(cust is Customers)
+            if (cust is Customers)
             {
                 cust.Name = newCustName;
                 cust.Phone = newPhone;
