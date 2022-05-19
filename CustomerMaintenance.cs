@@ -6,21 +6,33 @@ using System.Text;
 
 namespace ShopEasy
 {
-    class CustomerMaintenance
+    public class CustomerMaintenance
     {
         public string GetCustomerDiscount(string name)
         {
             // Gets the customer discount based on customer name
             using ShopEasyContext context = new ShopEasyContext();
+            if (name.Contains("'"))
+            {
+                name = name.Replace("'", "''");
+            }
+            if(String.IsNullOrEmpty(name) || String.IsNullOrWhiteSpace(name))
+            {
+                return "None";
+            }
             var custDiscount = context.Customers
                 .Where(c => c.Name == name)
                 .Select(c => c.Discount)
                 .FirstOrDefault();
-
-            return custDiscount;
+            if (custDiscount.Any()){
+                return custDiscount;
+            }
+            return "None";
+            
         }
         public decimal GetSalesTax(string discount)
         {
+            discount = discount.Trim();
             // Gets the sales tax based on the customer discont
             if (discount.Equals("Senior") || discount.Equals("Veteran"))
             {
