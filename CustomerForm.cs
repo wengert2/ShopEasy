@@ -10,6 +10,7 @@ namespace ShopEasy
 {
     public partial class CustomerForm : Form
     {
+        // name is passed from the login form 
         public CustomerForm(string name)
         {
             InitializeComponent();
@@ -20,7 +21,9 @@ namespace ShopEasy
         {
             InitializeComponent();
         }
-        public string User { get; set; }
+        // name of user
+        private string User { get; set; }
+        // KeyValuePair List to store products for invoice
         private List<KeyValuePair<int, int>> orders = new List<KeyValuePair<int, int>>();
         private void productListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -28,9 +31,12 @@ namespace ShopEasy
         }
         private void populateProductList()
         {
+            // adds products to the product list box for the user to see
             using ShopEasyContext context = new ShopEasyContext();
+            // gets all product names and prices as a string
             var prods = context.Products
                 .Select(p => p.Name + "\t\t\t $" + p.Price).ToList();
+            // loops through the query result and adds them to the list box
             foreach(string p in prods)
             {
                 productListBox.Items.Add(p);
@@ -39,6 +45,7 @@ namespace ShopEasy
         }
         private void populateProductName()
         {
+            // Gets the product names and adds them to the product name combo box
             using ShopEasyContext context = new ShopEasyContext();
             List<Products> prodList = context.Products.ToList();
             productNameComboBox.DataSource = prodList;
@@ -48,6 +55,7 @@ namespace ShopEasy
         }
         private void populateInvoices()
         {
+            // Gets the user's past invoices and displays them
             using ShopEasyContext context = new ShopEasyContext();
             var invoices = context.Invoices
                 .Where(i => i.CustomerId == GetCustomerID(User))
@@ -59,6 +67,7 @@ namespace ShopEasy
         }
         private void CustomerForm_Load(object sender, EventArgs e)
         {
+            // populates the boxes on form load
             populateInvoices();
             populateProductList();
             populateProductName();
@@ -83,10 +92,13 @@ namespace ShopEasy
         {
             using ShopEasyContext context = new ShopEasyContext();
             CustomerMaintenance customerMaintenance = new CustomerMaintenance();
+            // get the product name
             string prodName = productNameTextbox.Text;
+            // search for the product
             var prod = context.Products
                 .Where(p => p.Name == prodName)
                 .FirstOrDefault();
+            // if there is a match display it
             if (prod is Products)
             {
                 if (customerMaintenance.IsValidProduct(prod.ProductId))

@@ -91,6 +91,7 @@ namespace ShopEasy
             this.Controls.Add(this.employeeIDLoginLabel);
             this.Name = "employeeLoginForm";
             this.Text = "Employee Login";
+            this.Load += new System.EventHandler(this.employeeLoginForm_Load_1);
             this.ResumeLayout(false);
             this.PerformLayout();
 

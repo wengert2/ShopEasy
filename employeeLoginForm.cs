@@ -15,12 +15,17 @@ namespace ShopEasy
 
         private void employeeLoginSubmitButton_Click(object sender, EventArgs e)
         {
-
+            // gets the username and password input
             string username = employeeIDLoginTextbox.Text;
             string password = employeePasswordLoginTextbox.Text;
 
-            if (notEmpty(password) && notEmpty(username))
+            // checks if inputs are empty, null, or contain whitespace
+            if (String.IsNullOrEmpty(password) || String.IsNullOrWhiteSpace(username))
             {
+                // Checks if the login credentials match the admin's 
+                // currently they are the only employee in the database
+                // this function would have to be changed in the future if more
+                // employee logins are needed
                 if (IsAdmin(username, password))
                 {
                     AdminForm adminForm = new AdminForm();
@@ -44,17 +49,9 @@ namespace ShopEasy
         {
 
         }
-
-        private bool notEmpty(string testString)
-        {
-            if (testString != string.Empty)
-            {
-                return true;
-            }
-            return false;
-        }
         private bool IsAdmin(string username, string password)
         {
+            // checks to see if the login credentials match the admin's
             ShopEasyContext context = new ShopEasyContext();
             var adminLogin = from a in context.Logins
                                 where a.Username == username
@@ -65,6 +62,11 @@ namespace ShopEasy
                 return true;
             }
             return false;
+        }
+
+        private void employeeLoginForm_Load_1(object sender, EventArgs e)
+        {
+
         }
     }
 }

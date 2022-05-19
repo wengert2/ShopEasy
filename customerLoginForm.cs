@@ -21,11 +21,14 @@ namespace ShopEasy
 
         private void customerLoginSubmitButton_Click(object sender, EventArgs e)
         {
+            // Get the inputs
             string username = customerUsernameTextbox.Text;
             string password = customerPasswordTextbox.Text;
 
-            if (NotEmpty(password) && NotEmpty(username))
+            // Check that inputs are not empty
+            if (!String.IsNullOrEmpty(password) && !String.IsNullOrWhiteSpace(username))
             {
+                // check that the user exists, if their credentials match display the customer form
                 if (IsvalidCustomer(username, password))
                 {
                     CustomerForm customerForm = new CustomerForm(GetCustomerName(username, password));
@@ -45,6 +48,7 @@ namespace ShopEasy
         }
         private bool IsvalidCustomer(string username, string password)
         {
+            // Checks that there is an entry for the username and password 
             using ShopEasyContext context = new ShopEasyContext();
             var custLogin = from login in context.Logins
                                 where login.Username == username
@@ -56,16 +60,11 @@ namespace ShopEasy
             }
             return false;
         }
-        private bool NotEmpty(string testString)
-        {
-            if (testString != string.Empty)
-            {
-                return true;
-            }
-            return false;
-        }
         private string GetCustomerName(string username, string password)
         {
+            // given the username and password this function finds the 
+            // customerid assocaiated with the login and then gets
+            // the customer name to be used in the customer form
             using ShopEasyContext context = new ShopEasyContext();
             var custId = context.Logins
                 .Where(c => c.Username == username && c.Password == password)

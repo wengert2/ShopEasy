@@ -1,12 +1,7 @@
-﻿using Microsoft.Data.SqlClient;
-using ShopEasy.Models.DataLayer;
+﻿using ShopEasy.Models.DataLayer;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace ShopEasy
@@ -22,17 +17,9 @@ namespace ShopEasy
         {
 
         }
-        private string GetCustomerName(int id)
-        {
-            using ShopEasyContext context = new ShopEasyContext();
-            string cust = context.Customers
-                .Where(c => c.CustomerId == id)
-                .Select(c => c.Name)
-                .FirstOrDefault();
-            return cust;
-        }
         private void populateInvoiceListBox()
         {
+            // gets the invoices and adds them to the list box
             using ShopEasyContext context = new ShopEasyContext();
             var invoices = context.Invoices
                 .Select(i => i.Date.ToString() + " \t " + i.Customer.Name + "\t $" + i.TotalPayment.ToString()).ToList();
@@ -44,6 +31,7 @@ namespace ShopEasy
         }
         private void CustomerInvoiceListForm_Load(object sender, EventArgs e)
         {
+            // fills the list box on form load
             populateInvoiceListBox();
         }
     }

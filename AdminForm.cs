@@ -16,27 +16,32 @@ namespace ShopEasy
             using ShopEasyContext context = new ShopEasyContext();
         }
         private void AdminForm_Load(object sender, EventArgs e)
-        {
+        {   
+            // Populate the combo boxes on form load
             populateCustomerCheckoutComboBox();
             populateProductCheckkoutComboBox();
         }
 
+        // KeyValuePair List used to store products the customer wants to purchase
         private List<KeyValuePair<int, int>> orders = new List<KeyValuePair<int, int>>();
         private string GetEditDiscount()
         {
+            // get the discount from the check box
             string discount = "";
             if (custDiscountEditBox.CheckedItems.Count != 0)
             {
+                // loop through the checked items and get the discount
                 foreach (string s in custDiscountEditBox.CheckedItems)
                 {
                     discount += s;
                 }
+                // check if there is a discount applied
                 if (String.IsNullOrEmpty(discount) || String.IsNullOrWhiteSpace(discount) || discount.Equals(""))
                 {
                     discount = "None";
                 }
-
             }
+            // if there is no discount applied notify the user and set the discount to none
             else
             {
                 MessageBox.Show("Discount not selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -46,6 +51,7 @@ namespace ShopEasy
         }
         private string GetDiscount()
         {
+            // same as the edit discount function but for customer creation
             string discount = "";
             if (custRegDiscountBox.CheckedItems.Count != 0)
             {
@@ -85,6 +91,10 @@ namespace ShopEasy
         private void DeleteInvoiceItem(List<int> invoiceIds)
         {
             using ShopEasyContext context = new ShopEasyContext();
+            
+            // Gets a list of invoiceids to remove and loops through
+            // the list removing the invoice items associated with the 
+            // invoice id
             foreach (int invoiceid in invoiceIds)
             {
                 var invItems = context.InvoiceItem
@@ -116,9 +126,14 @@ namespace ShopEasy
         private bool DeleteLogin(int customerId)
         {
             using ShopEasyContext context = new ShopEasyContext();
+
+            // Get the login(s) associated with the customerId
             var log = context.Logins
                 .Where(l => l.CustomerId == customerId)
                 .FirstOrDefault();
+            
+            // check that the customerid is not the admin
+            // delete the login if it is not
             if (log.CustomerId > 1)
             {
                 context.Remove(log);
@@ -144,11 +159,14 @@ namespace ShopEasy
             {
                 MessageBox.Show("Customer Login Was Not Deleted", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
             // Delete the invoice items and then the invoices associated with the customer
             DeleteInvoices(custId);
             var delCust = context.Customers
                         .Where(c => c.Name == name)
                         .FirstOrDefault();
+            
+            // check that delCust is not empty or null
             if (delCust is Customers)
             {
                 context.Remove(delCust);
@@ -178,10 +196,15 @@ namespace ShopEasy
                     context.SaveChanges();
                 }
             }
+
+            // get the productid(s)
             var prod = context.Products
                 .Where(p => p.ProductId == prodId).ToList();
+
+            // check if anything found
             if (prod.Any())
             {
+                // loop through and delete the product(s)
                 foreach (var product in prod)
                 {
                     context.Remove(product);
@@ -194,6 +217,7 @@ namespace ShopEasy
 
         private string GetCustRegName()
         {
+            // returns the customer registration name if it is not empty, otherwise returns an empty string to be checked
             if (String.IsNullOrEmpty(customerNameTextbox.Text) || String.IsNullOrWhiteSpace(customerNameTextbox.Text))
             {
                 MessageBox.Show("Customer name cannot be blank", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -257,9 +281,13 @@ namespace ShopEasy
             int prodId = customerMaintenance.GetProductID(prodName);
 
             // Delete the product
-            if (DeleteProduct(prodId))
+            var result = MessageBox.Show("Are you sure?", "Delete", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+            if (result == DialogResult.OK)
             {
-                MessageBox.Show("Product Deleted", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (DeleteProduct(prodId))
+                {
+                    MessageBox.Show("Product Deleted", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
         }
         private void ProductSearchButton_Click(object sender, EventArgs e)

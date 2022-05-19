@@ -19,12 +19,14 @@ namespace ShopEasy
 
         private void customerWelcomeButton_Click(object sender, EventArgs e)
         {
+            // Opens the customer login form
             customerLoginForm customerLogin = new customerLoginForm();
             customerLogin.ShowDialog();
         }
 
         private void employeeWelcomeButton_Click(object sender, EventArgs e)
         {
+            // opens the employee login form
             employeeLoginForm employeeLogin = new employeeLoginForm();
             employeeLogin.ShowDialog();
         }
