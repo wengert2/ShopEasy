@@ -22,25 +22,29 @@ namespace ShopEasy
         {
 
         }
-        private void populateInvoiceListBox()
-        {
-
-        }
-        // TODO: FIX THIS
-        private void CustomerInvoiceListForm_Load(object sender, EventArgs e)
+        private string GetCustomerName(int id)
         {
             using ShopEasyContext context = new ShopEasyContext();
-            var customerInvoices = context.Customers
-                .Join(context.Invoices,
-                c => c.CustomerId,
-                i => i.CustomerId,
-                (c, i) => new { c.Name, i.Date, i.TotalPayment })
-                .OrderBy(ci => ci.Date)
-                .ThenByDescending(ci => ci.Name);
-
-            invoiceListBox.DataSource = customerInvoices.ToList();
-            invoiceListBox.DisplayMember = "Name";
-            invoiceListBox.ValueMember = "CustomerId";
+            string cust = context.Customers
+                .Where(c => c.CustomerId == id)
+                .Select(c => c.Name)
+                .FirstOrDefault();
+            return cust;
+        }
+        private void populateInvoiceListBox()
+        {
+            using ShopEasyContext context = new ShopEasyContext();
+            var invoices = context.Invoices
+                .Select(i => i.Date.ToString() + " \t " + i.Customer.Name + "\t $" + i.TotalPayment.ToString()).ToList();
+            
+            foreach (string invoice in invoices)
+            {
+                invoiceListBox.Items.Add(invoice);
+            }
+        }
+        private void CustomerInvoiceListForm_Load(object sender, EventArgs e)
+        {
+            populateInvoiceListBox();
         }
     }
 }

@@ -16,6 +16,11 @@ namespace ShopEasy
             InitializeComponent();
             using ShopEasyContext context = new ShopEasyContext();
         }
+        private void AdminForm_Load(object sender, EventArgs e)
+        {
+            populateCustomerCheckoutComboBox();
+            populateProductCheckkoutComboBox();
+        }
 
         private List<KeyValuePair<int, int>> orders = new List<KeyValuePair<int, int>>();
         private string GetDiscount()
@@ -43,10 +48,11 @@ namespace ShopEasy
         private string GetCustomerDiscount(string name)
         {
             using ShopEasyContext context = new ShopEasyContext();
-            string custDiscount = context.Customers
+            var custDiscount = context.Customers
                 .Where(c => c.Name == name)
                 .Select(c => c.Discount)
                 .FirstOrDefault();
+
             return custDiscount;
         }
         private decimal GetSalesTax(string discount)
@@ -356,6 +362,7 @@ The statement has been terminated.
             // Get the customer name, ID, and discount
             string custName = custCheckoutComboBox.Text;
             int custId = GetCustomerID(custName);
+            // FIX
             string discount = GetCustomerDiscount(custName);
             decimal salesTax = GetSalesTax(discount);
 
@@ -406,9 +413,10 @@ The statement has been terminated.
                 if (prod is Products)
                 {
                     // If teacher and book calculate discount
-                    if (prod.Category.Equals("Book") && discount.Equals("Teacher"))
+                    // @TODO: FIX THIS 
+                    if (prod.Category.Equals("Book") && discount.Equals("Teacher "))
                     {
-                        totalPrice += (prod.Price * quant) * 0.9m;
+                        totalPrice += prod.Price * quant * 0.9m;
                     }
                     else
                     {
@@ -459,11 +467,7 @@ The statement has been terminated.
             productCheckoutComboBox.ValueMember = nameof(Products.ProductId);
             productCheckoutComboBox.DisplayMember = nameof(Products.Name);
         }
-        private void AdminForm_Load(object sender, EventArgs e)
-        {
-            populateCustomerCheckoutComboBox();
-            populateProductCheckkoutComboBox();
-        }
+        
         private void custRegSubmitButton_Click(object sender, EventArgs e)
         {
             using ShopEasyContext context = new ShopEasyContext();

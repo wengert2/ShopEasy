@@ -26,22 +26,42 @@ namespace ShopEasy
         {
 
         }
+        private void populateProductList()
+        {
+            using ShopEasyContext context = new ShopEasyContext();
+            var prods = context.Products
+                .Select(p => p.Name + "\t\t\t $" + p.Price).ToList();
+            foreach(string p in prods)
+            {
+                productListBox.Items.Add(p);
+            }
 
-        private void CustomerForm_Load(object sender, EventArgs e)
+        }
+        private void populateProductName()
         {
             using ShopEasyContext context = new ShopEasyContext();
             List<Products> prodList = context.Products.ToList();
-            productListBox.DataSource = prodList;
-            productListBox.ValueMember = nameof(Products.ProductId);
-            productListBox.DisplayMember = nameof(Products.Name);
-
-            productPriceListbox.DataSource = prodList;
-            productPriceListbox.ValueMember = nameof(Products.ProductId);
-            productPriceListbox.DisplayMember = nameof(Products.Price);
-
             productNameComboBox.DataSource = prodList;
             productNameComboBox.ValueMember = nameof(Products.ProductId);
             productNameComboBox.DisplayMember = nameof(Products.Name);
+
+        }
+        private void populateInvoices()
+        {
+            using ShopEasyContext context = new ShopEasyContext();
+            var invoices = context.Invoices
+                .Where(i => i.CustomerId == GetCustomerID(User))
+                .Select(i => i.Date.ToString() + "\t $" + i.TotalPayment.ToString()).ToList();
+            foreach (string invoice in invoices)
+            {
+                customerInvoicesListBox.Items.Add(invoice);
+            }
+        }
+        private void CustomerForm_Load(object sender, EventArgs e)
+        {
+            populateInvoices();
+            populateProductList();
+            populateProductName();
         }
 
         private void productPriceListbox_SelectedIndexChanged(object sender, EventArgs e)
@@ -77,13 +97,17 @@ namespace ShopEasy
         }
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // display this customers past invoices
-            // get the customer id associated with the login and then display
-            // invoices with the same customerid
             using ShopEasyContext context = new ShopEasyContext();
+            int uId = GetCustomerID(User);
+            var invoices = context.Invoices
+                .Where(i => i.CustomerId == uId)
+                .Select(i => i.Date.ToString() + " \t " + i.Customer.Name + "\t $" + i.TotalPayment.ToString()).ToList();
 
-            //var trans = context.Customers
-            //    .Where(t => t.CustomerId == )
+            foreach (string invoice in invoices)
+            {
+                customerInvoicesListBox.Items.Add(invoice);
+            }
+
 
         }
         private void welcomeToLbl_Click(object sender, EventArgs e)
@@ -217,7 +241,7 @@ namespace ShopEasy
                 if (prod is Products)
                 {
                     // If teacher and book calculate discount
-                    if (prod.Category.Equals("Book") && discount.Equals("Teacher"))
+                    if (prod.Category.Equals("Book") && discount.Equals("Teacher "))
                     {
                         totalPrice += (prod.Price * quant) * 0.9m;
                     }
@@ -249,6 +273,11 @@ namespace ShopEasy
             }
             context.SaveChanges();
             MessageBox.Show($"Invoice: {invoiceId}\n Total: ${totalPrice}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void customerInvoicesListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

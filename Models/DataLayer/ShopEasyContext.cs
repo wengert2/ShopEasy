@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -25,8 +26,7 @@ namespace ShopEasy.Models.DataLayer
         {
             if (!optionsBuilder.IsConfigured)
             {
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Data Source=(LocalDB)\\MSSQLLocalDB; AttachDBFilename=C:\\Users\\J\\source\\repos\\ShopEasy\\ShopEasy.mdf; Integrated security=True");
+                optionsBuilder.UseSqlServer(ConfigurationManager.ConnectionStrings["ShopEasy"].ConnectionString);
             }
         }
 

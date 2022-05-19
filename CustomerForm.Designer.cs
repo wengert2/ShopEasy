@@ -30,7 +30,6 @@ namespace ShopEasy
         private void InitializeComponent()
         {
             this.productsListGroupbox = new System.Windows.Forms.GroupBox();
-            this.productPriceListbox = new System.Windows.Forms.ListBox();
             this.productListBox = new System.Windows.Forms.ListBox();
             this.customerTransactionsGroupbox = new System.Windows.Forms.GroupBox();
             this.customerInvoicesListBox = new System.Windows.Forms.ListBox();
@@ -53,7 +52,6 @@ namespace ShopEasy
             // 
             // productsListGroupbox
             // 
-            this.productsListGroupbox.Controls.Add(this.productPriceListbox);
             this.productsListGroupbox.Controls.Add(this.productListBox);
             this.productsListGroupbox.Location = new System.Drawing.Point(0, 27);
             this.productsListGroupbox.Name = "productsListGroupbox";
@@ -62,23 +60,13 @@ namespace ShopEasy
             this.productsListGroupbox.TabStop = false;
             this.productsListGroupbox.Text = "Inventory";
             // 
-            // productPriceListbox
-            // 
-            this.productPriceListbox.FormattingEnabled = true;
-            this.productPriceListbox.ItemHeight = 15;
-            this.productPriceListbox.Location = new System.Drawing.Point(271, 22);
-            this.productPriceListbox.Name = "productPriceListbox";
-            this.productPriceListbox.Size = new System.Drawing.Size(64, 169);
-            this.productPriceListbox.TabIndex = 1;
-            this.productPriceListbox.SelectedIndexChanged += new System.EventHandler(this.productPriceListbox_SelectedIndexChanged);
-            // 
             // productListBox
             // 
             this.productListBox.FormattingEnabled = true;
             this.productListBox.ItemHeight = 15;
             this.productListBox.Location = new System.Drawing.Point(12, 22);
             this.productListBox.Name = "productListBox";
-            this.productListBox.Size = new System.Drawing.Size(253, 169);
+            this.productListBox.Size = new System.Drawing.Size(336, 169);
             this.productListBox.TabIndex = 0;
             this.productListBox.SelectedIndexChanged += new System.EventHandler(this.productListBox_SelectedIndexChanged);
             // 
@@ -100,7 +88,7 @@ namespace ShopEasy
             this.customerInvoicesListBox.Name = "customerInvoicesListBox";
             this.customerInvoicesListBox.Size = new System.Drawing.Size(411, 169);
             this.customerInvoicesListBox.TabIndex = 0;
-            this.customerInvoicesListBox.SelectedIndexChanged += new System.EventHandler(this.listBox2_SelectedIndexChanged);
+            this.customerInvoicesListBox.SelectedIndexChanged += new System.EventHandler(this.customerInvoicesListBox_SelectedIndexChanged);
             // 
             // customerProductSearchGroupbox
             // 
@@ -241,7 +229,6 @@ namespace ShopEasy
 
         private System.Windows.Forms.GroupBox productsListGroupbox;
         private System.Windows.Forms.ListBox productListBox;
-        private System.Windows.Forms.ListBox productPriceListbox;
         private System.Windows.Forms.GroupBox customerTransactionsGroupbox;
         private System.Windows.Forms.ListBox customerInvoicesListBox;
         private System.Windows.Forms.GroupBox customerProductSearchGroupbox;
